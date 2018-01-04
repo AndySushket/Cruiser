@@ -7,44 +7,60 @@ class Water {
 		this.scene= new THREE.Scene();
 		this.scene.fog = new THREE.Fog("#366491", 500, 8850);
 		this.renderer = new THREE.WebGLRenderer();
-		this.light=new THREE.AmbientLight(0xffffff);
+		this.renderer.setSize(window.innerWidth,window.innerHeight);
+		document.getElementById("webgl-container").appendChild(this.renderer.domElement);
+		this.light=new THREE.DirectionalLight(0xffffff);
 		this.raycaster = new THREE.Raycaster();
 
 		this.initScene();
-		console.log(this)
 
 	}
 	onMouseMove( event ) {
+		//
+		// this.raycaster = new THREE.Raycaster();
+		// this.mouse = new THREE.Vector2();
+		// this.mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
+		// this.mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
+		// this.raycaster.setFromCamera( this.mouse, this.camera );
+		//
+		//
+		// let intersects = this.raycaster.intersectObjects( this.scene.children,true );
+		// for ( var i = 0; i < intersects.length; i++ ) {
+		// 	if(intersects[i].object.name === "default" ){
+		// 		// let sound = new Audio();
+		// 		// sound.src = "ship horn - sound effect.mp3";
+		// 		// sound.play();
+		// 	}
+		// }
 
-		this.raycaster = new THREE.Raycaster();
-		this.mouse = new THREE.Vector2();
-		this.mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
-		this.mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
-		this.raycaster.setFromCamera( this.mouse, this.camera );
-
-
-		let intersects = this.raycaster.intersectObjects( this.scene.children,true );
-		for ( var i = 0; i < intersects.length; i++ ) {
-			if(intersects[i].object.name === "default" ){
-				let sound = new Audio();
-				sound.src = "ship horn - sound effect.mp3";
-				sound.play();
-			}
-		}
-
-}
+	}
 	initScene(){
 
-		this.renderer.setSize(window.innerWidth,window.innerHeight);
-		document.getElementById("webgl-container").appendChild(this.renderer.domElement);
-
 		this.camera = new THREE.PerspectiveCamera(35,window.innerWidth/window.innerHeight,1,100000);
-
-		this.camera.position.z=150;
-		this.camera.position.y=150;
 		this.scene.add(this.camera);
 
+		this.box = new THREE.Mesh(new THREE.BoxGeometry(20,20,20),new THREE.MeshNormalMaterial());
+
+		this.light = new THREE.DirectionalLight(new THREE.Color("#0xffffff"));
+		this.light.position.set(0,50,0);
+
+		this.scene.add(this.light);
+		this.scene.add(this.box);
+
+
+		this.initSea();
+		this.initControls();
+		this.initCruiser();
+		this.initSkyBox();
+		this.animate();
+
+		window.addEventListener( 'mouseup', this.onMouseMove.bind(this), false );
+	}
+
+	initSea(){
+
 		this.texture = new THREE.TextureLoader().load("water4.jpg");
+		this.anisptropy=1;
 		this.texture.wrapS = THREE.RepeatWrapping;
 		this.texture.wrapT =THREE.RepeatWrapping;
 		this.texture.repeat.set( 20, 20 );
@@ -61,19 +77,18 @@ class Water {
 				side:THREE.DoubleSide
 			})
 		);
-		this.box = new THREE.Mesh(new THREE.BoxGeometry(20,20,20),new THREE.MeshNormalMaterial());
-
-		this.light = new THREE.DirectionalLight(new THREE.Color("#0xffffff"));
-		this.light.position.set(0,50,0);
-		this.scene.add(this.light);
-		this.scene.add(this.box);
-
 		this.scene.add(this.plane);
 		this.plane.rotation.x =90* (	-Math.PI/180);
+	}
 
+	initControls(){
 		this.controls = new THREE.OrbitControls( this.camera );
-		this.camera.position.set( 0, 220, 800 );
+		this.camera.position.set( 0, 320, 800 );
 		this.controls.update();
+
+	}
+
+	initCruiser(){
 
 		var mtlLoader = new THREE.MTLLoader();
 		mtlLoader.setBaseUrl( "Cruisership" );
@@ -84,7 +99,7 @@ class Water {
 
 			var loaderOBJ = new THREE.OBJLoader();
 			loaderOBJ.setMaterials( materials );
-			// loaderOBJ.setName( "Cruiser" );
+
 
 			loaderOBJ.load( 'Cruisership/Cruiser.obj', ( event )=> {
 
@@ -92,10 +107,13 @@ class Water {
 				event.name = "Cruiser";
 				this.cruiser = event;
 				this.cruiser.position.y = -30;;
-				// this.camera.lookAt(this.cruiser);
+
 			});
 
 		});
+	}
+
+	initSkyBox(){
 		let skyboxmaterials = [ new THREE.MeshBasicMaterial({map: new THREE.TextureLoader().load("skybox/lagoon_ft.png"),side:THREE.DoubleSide}),
 			new THREE.MeshBasicMaterial({map: new THREE.TextureLoader().load("skybox/lagoon_bk.png"),side:THREE.DoubleSide}),
 			new THREE.MeshBasicMaterial({map: new THREE.TextureLoader().load("skybox/lagoon_up.png"),side:THREE.DoubleSide}),
@@ -105,10 +123,6 @@ class Water {
 		];
 		let skybox = new THREE.Mesh(new THREE.CubeGeometry(10000,10000,10000),new THREE.MeshFaceMaterial(skyboxmaterials));
 		this.scene.add(skybox);
-
-		this.animate();
-
-		window.addEventListener( 'mouseup', this.onMouseMove.bind(this), false );
 	}
 
 
